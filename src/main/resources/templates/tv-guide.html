@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>仙台番組表</title>
+</head>
+<body>
+    <h1>📺 仙台番組表（テスト）</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>放送局</th>
+                <th>番組名</th>
+                <th>開始時間</th>
+                <th>内容</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${programs}">
+                <td th:text="${p.stationName}"></td>
+                <td th:text="${p.title}" style="font-weight: bold;"></td>
+                <td th:text="${#temporals.format(p.startTime, 'HH:mm')}"></td>
+                <td th:text="${p.description}"></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
