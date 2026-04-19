@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>仙台番組表</title>
+	
+	
 </head>
 <body>
     <h1>📺 仙台番組表（テスト）</h1>
+	<form th:action="@{/tv/update}" method="post" style="margin-bottom: 20px;">
+	        <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+	            最新の仙台番組表を取得する
+	        </button>
+	    </form>
     <table border="1">
         <thead>
             <tr>
