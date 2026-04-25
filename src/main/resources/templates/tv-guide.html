@@ -2,32 +2,74 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>仙台番組表</title>
-	
-	
+    <title>仙台番組表 - 1週間ナビ</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f9f9f9; }
+        .station-selector { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-station { 
+            padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;
+            background-color: #eee; color: #333; font-weight: bold; text-decoration: none;
+        }
+        .btn-station:hover { background-color: #ddd; }
+        .active-tbc { background-color: #005bac; color: white; }
+
+        /* 日付選択タブのスタイル */
+        .date-selector { display: flex; gap: 5px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .date-tab {
+            padding: 8px 15px; border: 1px solid #ccc; border-radius: 4px;
+            text-decoration: none; color: #333; background: #fff; white-space: nowrap;
+            font-size: 0.9em;
+        }
+        .date-tab:hover { background-color: #f0f0f0; }
+        /* 選択中のタブの色（少し濃いめのグレーに変更） */
+        .date-tab.active { background-color: #555; color: white; border-color: #333; }
+
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; position: sticky; top: 0; }
+        .time-cell { font-weight: bold; color: #555; width: 100px; text-align: center; }
+        .program-title { font-weight: bold; color: #000; }
+    </style>
 </head>
 <body>
-    <h1>📺 仙台番組表（テスト）</h1>
-	<form th:action="@{/tv/update}" method="post" style="margin-bottom: 20px;">
-	        <button type="submit" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
-	            最新の仙台番組表を取得する
-	        </button>
-	    </form>
-    <table border="1">
+    <h1>📺 仙台番組表</h1>
+    
+    <div class="station-selector">
+        <form th:action="@{/tv/update}" method="post">
+            <input type="hidden" name="stationCode" value="tbc">
+            <button type="submit" class="btn-station active-tbc">TBC東北放送（1週間分取得）</button>
+        </form>
+        <button class="btn-station" disabled>仙台放送 (準備中)</button>
+        <button class="btn-station" disabled>ミヤギテレビ (準備中)</button>
+        <button class="btn-station" disabled>khb東日本放送 (準備中)</button>
+        <button class="btn-station" disabled>NHK仙台 (準備中)</button>
+    </div>
+
+    <div class="date-selector" th:if="${programs != null}">
+        <a th:each="i : ${#numbers.sequence(0, 6)}" 
+           th:with="d=${T(java.time.LocalDate).now().plusDays(i)}, dStr=${#temporals.format(d, 'yyyyMMdd')}"
+           th:href="@{/tv(date=${dStr})}"
+           th:classappend="${dStr == selectedDate} ? 'active' : ''"
+           class="date-tab">
+            <span th:text="${#temporals.format(d, 'MM/dd(E)')}"></span>
+        </a>
+    </div>
+
+    <div th:if="${programs == null or programs.empty}">
+        <p>データがありません。局ボタンを押してデータを取得（スクレイピング）してください。</p>
+    </div>
+
+    <table th:if="${programs != null and !programs.empty}">
         <thead>
             <tr>
-                <th>放送局</th>
+                <th style="width: 120px;">時刻</th>
                 <th>番組名</th>
-                <th>開始時間</th>
-                <th>内容</th>
             </tr>
         </thead>
         <tbody>
             <tr th:each="p : ${programs}">
-                <td th:text="${p.stationName}"></td>
-                <td th:text="${p.title}" style="font-weight: bold;"></td>
-                <td th:text="${#temporals.format(p.startTime, 'HH:mm')}"></td>
-                <td th:text="${p.description}"></td>
+                <td class="time-cell" th:text="${p.description}"></td>
+                <td class="program-title" th:text="${p.title}"></td>
             </tr>
         </tbody>
     </table>

@@ -1,4 +1,4 @@
-package com.sakura;
+/*package com.sakura;
 
 import java.time.LocalDateTime;
 
@@ -30,8 +30,8 @@ public class DataInitializer implements CommandLineRunner {
             p2.setStartTime(LocalDateTime.now().plusHours(1));
             p2.setDescription("宮城のスポーツ情報。");
             repository.save(p2);
-            
+
             System.out.println("✅ ダミーデータを投入しました");
         }
     }
-}
+}*/

@@ -1,51 +1,76 @@
 package com.sakura;
 
-import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProgramService {
-    private final ProgramRepository repository;
 
-    public ProgramService(ProgramRepository repository) {
-        this.repository = repository;
+    private final ProgramRepository programRepository;
+
+    public ProgramService(ProgramRepository programRepository) {
+        this.programRepository = programRepository;
     }
-    
-    public void fetchSendaiPrograms() {
-        String url = "https://tv.yahoo.co.jp/listings/34/";
-        try {
-            // 1. サイトに接続してHTMLを取得
-            Document doc = Jsoup.connect(url).get();
-            
-            // 2. 番組の枠（各放送局の縦列など）を特定
-            // Yahoo!テレビの番組枠は 'section' タグなどに分かれていることが多いです
-            Elements programElements = doc.select(".y-tv-listing__program"); 
 
-            for (Element el : programElements) {
-                // タイトルを取得
-                String title = el.select(".y-tv-listing__program-title").text();
+    @Transactional
+    public void fetchTbcWeekly() {
+        // 1. 既存のデータを一旦削除
+        programRepository.deleteAll();
+        programRepository.flush();
+
+        // 2. 本日を起点に7日間分ループ
+        LocalDate startDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate targetDate = startDate.plusDays(i);
+            String dateStr = targetDate.format(formatter);
+            String url = "https://www.tbc-sendai.co.jp/tpg/week_view.php?d=" + dateStr;
+
+            try {
+                System.out.println("📅 " + dateStr + " のTBC番組表を解析中...");
                 
-                if (!title.isEmpty()) {
-                    Program program = new Program();
-                    program.setTitle(title);
-                    // 一旦、放送局名は親要素などから推測するか、固定でテスト
-                    program.setStationName("仙台地上波"); 
-                    program.setStartTime(LocalDateTime.now());
-                    program.setDescription(el.select(".y-tv-listing__program-content").text());
-                    
-                    repository.save(program);
+                Document doc = Jsoup.connect(url)
+                                    .userAgent("Mozilla/5.0")
+                                    .timeout(10000)
+                                    .get();
+
+                // あなたが見つけた最強のセレクタ！
+                Elements rows = doc.select("tr"); // 行単位で回す
+
+                for (Element row : rows) {
+                    Element timeEl = row.selectFirst("td[id^=asa], td[id^=hiru], td[id^=yoru]"); // 時刻セル
+                    Element titleEl = row.selectFirst("td#bangumi"); // 番組名セル
+
+                    if (timeEl != null && titleEl != null) {
+                        String timeStr = timeEl.text().trim();
+                        String titleStr = titleEl.text().trim();
+
+                        if (titleStr.length() > 2) {
+                            Program program = new Program();
+                            program.setStationName("TBC東北放送");
+                            program.setTitle(titleStr);
+                            program.setStartTime(targetDate.atStartOfDay()); // 日付判別用
+                            program.setDescription(timeStr); // ★ここに時刻（4:55など）を入れる
+                            programRepository.save(program);
+                        }
+                    }
                 }
+                System.out.println("✅ " + dateStr + " 分の保存完了");
+
+            } catch (Exception e) {
+                System.err.println("❌ " + dateStr + " の取得でエラー: " + e.getMessage());
             }
-            System.out.println("✅ データ保存完了！");
-        } catch (IOException e) {
-            System.err.println("エラー発生: " + e.getMessage());
         }
+        
+        programRepository.flush();
+        System.out.println("🎉 全日程の取得が完了しました！現在のDB件数: " + programRepository.count());
     }
 }
-
