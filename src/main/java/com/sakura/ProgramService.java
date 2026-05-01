@@ -18,7 +18,7 @@ public class ProgramService {
     public ProgramService(ProgramRepository programRepository) {
         this.programRepository = programRepository;
     }
-
+    
     @Transactional
     public void fetchTbcWeekly() {
         // 1. 既存のデータを一旦削除
@@ -74,3 +74,5 @@ public class ProgramService {
         System.out.println("🎉 全日程の取得が完了しました！現在のDB件数: " + programRepository.count());
     }
 }
+
+    

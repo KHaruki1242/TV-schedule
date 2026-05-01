@@ -1,10 +1,10 @@
 package com.sakura;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -34,32 +34,51 @@ public class ProgramController {
 
     @PostMapping("/tv/update")
     public String updatePrograms(@RequestParam String stationCode) {
+        String stationName = "TBC東北放送"; // デフォルト
+
         if ("tbc".equals(stationCode)) {
             programService.fetchTbcWeekly();
+            stationName = "TBC東北放送";
         }
-        // 更新が終わったら一覧画面へリダイレクト
-        return "redirect:/tv";
+           
+        // 💡 修正：更新した局のパラメータを付けてリダイレクトする
+        return "redirect:/tv?station=" + java.net.URLEncoder.encode(stationName, java.nio.charset.StandardCharsets.UTF_8);
     }
-
+    
     @GetMapping("/tv")
-    public String showTvGuide(@RequestParam(required = false) String date, Model model) {
+    public String showTvGuide(
+            @RequestParam(required = false) String date, 
+            @RequestParam(required = false, defaultValue = "TBC東北放送") String station, 
+            Model model) {
+
+        // 1. フォーマット定義
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        // 2. 日付のパース（try-catchをスッキリさせました）
         LocalDate targetDate;
-        if (date != null && date.length() == 8) {
-            targetDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-        } else {
-            targetDate = LocalDate.now(); // 指定がなければ今日
+        try {
+            targetDate = (date != null && !date.isEmpty()) ? LocalDate.parse(date, formatter) : LocalDate.now();
+        } catch (Exception e) {
+            targetDate = LocalDate.now();
         }
 
-        // その日の 00:00:00 〜 23:59:59 の範囲を指定
-        LocalDateTime startOfDay = targetDate.atStartOfDay();
-        LocalDateTime endOfDay = targetDate.atTime(LocalTime.MAX);
+        // 3. DBから取得
+        List<Program> allStationPrograms = programRepository.findByStationName(station);
 
-        // DBからその日だけのデータを取得
-        List<Program> programs = programRepository.findByStartTimeBetweenOrderByStartTimeAsc(startOfDay, endOfDay);
-        
-        model.addAttribute("programs", programs);
-        model.addAttribute("selectedDate", targetDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        // 4. フィルタリング
+        final LocalDate finalTargetDate = targetDate; // Lambda用の定数化
+        List<Program> filteredPrograms = allStationPrograms.stream()
+                .filter(p -> p.getStartTime().toLocalDate().equals(finalTargetDate))
+                .sorted(Comparator.comparing(Program::getStartTime))
+                .collect(Collectors.toList());
+
+        // 5. モデルへの詰め込み
+        model.addAttribute("programs", filteredPrograms);
+        model.addAttribute("currentStation", station);
+        // HTML側の th:classappend で比較しやすいようにハイフンありの文字列で渡す
+        model.addAttribute("selectedDate", targetDate.format(formatter));
         
         return "tv-guide";
     }
+    
 }

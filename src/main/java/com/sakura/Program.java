@@ -20,4 +20,5 @@ public class Program {
     private String title;       // 番組名
     private LocalDateTime startTime;
     private String description; // 番組内容
+    
 }

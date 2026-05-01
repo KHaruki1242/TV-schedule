@@ -11,7 +11,8 @@
             background-color: #eee; color: #333; font-weight: bold; text-decoration: none;
         }
         .btn-station:hover { background-color: #ddd; }
-        .active-tbc { background-color: #005bac; color: white; }
+        /* TBC選択時の青色 */
+        .active-tbc { background-color: #005bac !important; color: white !important; }
 
         /* 日付選択タブのスタイル */
         .date-selector { display: flex; gap: 5px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; }
@@ -21,42 +22,69 @@
             font-size: 0.9em;
         }
         .date-tab:hover { background-color: #f0f0f0; }
-        /* 選択中のタブの色（少し濃いめのグレーに変更） */
-        .date-tab.active { background-color: #555; color: white; border-color: #333; }
+
+        /* 💡 選択中の日付を青くするスタイル */
+        .date-tab.active-blue { 
+            background-color: #007bff !important; 
+            color: white !important; 
+            border-color: #0056b3 !important;
+            font-weight: bold;
+        }
 
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #f4f4f4; position: sticky; top: 0; }
         .time-cell { font-weight: bold; color: #555; width: 100px; text-align: center; }
         .program-title { font-weight: bold; color: #000; }
+        /* 🌸 推し活特別スタイル（任意） */
+        .sakura-highlight { background-color: #fff0f5; }
     </style>
 </head>
 <body>
     <h1>📺 仙台番組表</h1>
-    
-    <div class="station-selector">
-        <form th:action="@{/tv/update}" method="post">
-            <input type="hidden" name="stationCode" value="tbc">
-            <button type="submit" class="btn-station active-tbc">TBC東北放送（1週間分取得）</button>
-        </form>
-        <button class="btn-station" disabled>仙台放送 (準備中)</button>
-        <button class="btn-station" disabled>ミヤギテレビ (準備中)</button>
-        <button class="btn-station" disabled>khb東日本放送 (準備中)</button>
-        <button class="btn-station" disabled>NHK仙台 (準備中)</button>
-    </div>
+	
+	<div class="station-selector">
+	    <!-- TBC -->
+	    <div style="display: flex; align-items: center; gap: 2px;">
+	        <a th:href="@{/tv(station='TBC東北放送', date=${selectedDate})}" 
+	           class="btn-station" 
+	           th:classappend="${currentStation == 'TBC東北放送' || currentStation == null} ? 'active-tbc' : ''">
+	           TBC東北放送
+	        </a>
+	        <form th:action="@{/tv/update}" method="post" style="display: inline;">
+	            <input type="hidden" name="stationCode" value="tbc">
+	            <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
+	        </form>
+	    </div>
 
-    <div class="date-selector" th:if="${programs != null}">
-        <a th:each="i : ${#numbers.sequence(0, 6)}" 
-           th:with="d=${T(java.time.LocalDate).now().plusDays(i)}, dStr=${#temporals.format(d, 'yyyyMMdd')}"
-           th:href="@{/tv(date=${dStr})}"
-           th:classappend="${dStr == selectedDate} ? 'active' : ''"
-           class="date-tab">
-            <span th:text="${#temporals.format(d, 'MM/dd(E)')}"></span>
-        </a>
-    </div>
+	    <!-- ミヤギテレビ (NG版) -->
+	    <div style="display: flex; align-items: center; gap: 2px;">
+	        <a href="javascript:void(0)" 
+	           class="btn-station" 
+	           style="background-color: #ddd; color: #888; cursor: not-allowed; pointer-events: none;">
+	           ミヤギテレビ（NG）
+	        </a>
+	        <button type="button" class="btn-station" style="padding: 10px 10px; opacity: 0.5;" disabled>🔄</button>
+	    </div>
+
+	    <button class="btn-station" disabled>仙台放送 (準備中)</button>
+	    <button class="btn-station" disabled>khb東日本放送 (準備中)</button>
+	    <button class="btn-station" disabled>NHK仙台 (準備中)</button>
+	</div>
+
+	<!-- 日付選択タブ (💡 修正：dStr を yyyy-MM-dd に合わせました) -->
+	<div class="date-selector" th:if="${programs != null}">
+	    <a th:each="i : ${#numbers.sequence(0, 6)}" 
+	       th:with="d=${T(java.time.LocalDate).now().plusDays(i)}, dStr=${#temporals.format(d, 'yyyy-MM-dd')}"
+	       th:href="@{/tv(date=${dStr}, station=${currentStation})}"
+	       class="date-tab"
+	       th:classappend="${dStr == selectedDate} ? 'active-blue' : ''">
+	        <span th:text="${#temporals.format(d, 'MM/dd(E)')}"></span>
+	    </a>
+	</div>
 
     <div th:if="${programs == null or programs.empty}">
-        <p>データがありません。局ボタンを押してデータを取得（スクレイピング）してください。</p>
+        <p>データがありません。局ボタンを押してデータを取得してください。</p>
     </div>
 
     <table th:if="${programs != null and !programs.empty}">
@@ -67,9 +95,12 @@
             </tr>
         </thead>
         <tbody>
-            <tr th:each="p : ${programs}">
+            <tr th:each="p : ${programs}" th:classappend="${p.title.contains('櫻坂')} ? 'sakura-highlight' : ''">
                 <td class="time-cell" th:text="${p.description}"></td>
-                <td class="program-title" th:text="${p.title}"></td>
+                <td class="program-title">
+                    <span th:text="${p.title}"></span>
+                    <span th:if="${p.title.contains('櫻坂')}" style="color: #e3007f; margin-left: 5px;">🌸</span>
+                </td>
             </tr>
         </tbody>
     </table>
