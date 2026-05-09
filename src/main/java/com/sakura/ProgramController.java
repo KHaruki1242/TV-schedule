@@ -34,14 +34,16 @@ public class ProgramController {
 
     @PostMapping("/tv/update")
     public String updatePrograms(@RequestParam String stationCode) {
-        String stationName = "TBC東北放送"; // デフォルト
+        String stationName = "TBC東北放送";
 
         if ("tbc".equals(stationCode)) {
             programService.fetchTbcWeekly();
             stationName = "TBC東北放送";
+        } else if ("ox".equals(stationCode)) { // 💡 追加
+            programService.fetchOxWeekly();
+            stationName = "仙台放送";
         }
            
-        // 💡 修正：更新した局のパラメータを付けてリダイレクトする
         return "redirect:/tv?station=" + java.net.URLEncoder.encode(stationName, java.nio.charset.StandardCharsets.UTF_8);
     }
     

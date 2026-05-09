@@ -67,7 +67,19 @@
 	        <button type="button" class="btn-station" style="padding: 10px 10px; opacity: 0.5;" disabled>🔄</button>
 	    </div>
 
-	    <button class="btn-station" disabled>仙台放送 (準備中)</button>
+		<!-- 仙台放送 -->
+		<div style="display: flex; align-items: center; gap: 2px;">
+		    <a th:href="@{/tv(station='仙台放送', date=${selectedDate})}" 
+		       class="btn-station" 
+		       th:classappend="${currentStation == '仙台放送'} ? 'active-tbc' : ''">
+		       仙台放送
+		    </a>
+		    <form th:action="@{/tv/update}" method="post" style="display: inline;">
+		        <input type="hidden" name="stationCode" value="ox">
+		        <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
+		    </form>
+		</div>
+		
 	    <button class="btn-station" disabled>khb東日本放送 (準備中)</button>
 	    <button class="btn-station" disabled>NHK仙台 (準備中)</button>
 	</div>
