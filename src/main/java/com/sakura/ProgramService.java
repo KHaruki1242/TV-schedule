@@ -136,6 +136,191 @@ public class ProgramService {
             }
         }
     }
+    
+ // 💡 引数なしで呼ばれた場合、自動的に「今日」を開始日として1週間分回す
+    public void fetchMmtWeekly() {
+        fetchMmtWeekly(LocalDate.now());
+    }
+
+    // ミヤギテレビ（MMT）一括取得メソッド
+    public void fetchMmtWeekly(LocalDate startDate) {
+        DateTimeFormatter urlFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        
+        for (int i = 0; i < 7; i++) {
+            LocalDate targetDate = startDate.plusDays(i);
+            String dateStr = targetDate.format(urlFormatter);
+            
+            // 宮城県エリア（ggm_group_id=19）のURL
+            String url = "https://bangumi.org/epg/td?broad_cast_date=" + dateStr + "&ggm_group_id=19";
+            
+            try {
+                Document doc = Jsoup.connect(url)
+                        .userAgent("Mozilla/5.0")
+                        .timeout(15000)
+                        .get();
+
+                // 💡 修正：ミヤギテレビのライン「#program_line_4」だけをターゲットにする
+                Elements programs = doc.select("#program_line_4 li[s]"); 
+
+                int dailyCount = 0;
+                for (Element p : programs) {
+                    String title = p.select(".program_title").text().trim();
+                    String startTimeRaw = p.attr("s"); 
+
+                    if (!startTimeRaw.isEmpty() && !title.isEmpty()) {
+                        try {
+                            // 開始日時のパース
+                            DateTimeFormatter startFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+                            LocalDateTime startTime = LocalDateTime.parse(startTimeRaw, startFormatter);
+
+                            // 💡 改修済みの「時刻だけ表記」を適用
+                            String displayTime = startTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                            // --- Repositoryへの保存 ---
+                            Program program = new Program();
+                            program.setStationName("ミヤギテレビ"); // 局名をセット
+                            program.setTitle(title);
+                            program.setStartTime(startTime);
+                            program.setDescription(displayTime); // descriptionには時刻のみ
+                            
+                            programRepository.save(program);
+                            dailyCount++;
+                        } catch (Exception e) {
+                            continue; 
+                        }
+                    }
+                }
+                System.out.println("✅ " + targetDate + " (ミヤギテレビ) 取得成功！ 件数: " + dailyCount);
+                Thread.sleep(1000); // サーバー負荷軽減
+
+            } catch (Exception e) {
+                System.err.println("❌ " + dateStr + " ミヤギテレビ取得エラー: " + e.getMessage());
+            }
+        }
+    }
+    
+ // ==========================================
+ // khb東日本放送
+ // ==========================================
+ public void fetchKhbWeekly() {
+     fetchKhbWeekly(LocalDate.now());
+ }
+
+ public void fetchKhbWeekly(LocalDate startDate) {
+     DateTimeFormatter urlFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+     for (int i = 0; i < 7; i++) {
+         LocalDate targetDate = startDate.plusDays(i);
+         String dateStr = targetDate.format(urlFormatter);
+         String url = "https://bangumi.org/epg/td?broad_cast_date=" + dateStr + "&ggm_group_id=19";
+         try {
+             Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0").timeout(15000).get();
+             // 💡 khbは program_line_5
+             Elements programs = doc.select("#program_line_5 li[s]"); 
+
+             for (Element p : programs) {
+                 String title = p.select(".program_title").text().trim();
+                 String startTimeRaw = p.attr("s"); 
+                 if (!startTimeRaw.isEmpty() && !title.isEmpty()) {
+                     DateTimeFormatter startFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+                     LocalDateTime startTime = LocalDateTime.parse(startTimeRaw, startFormatter);
+                     String displayTime = startTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                     Program program = new Program();
+                     program.setStationName("khb東日本放送");
+                     program.setTitle(title);
+                     program.setStartTime(startTime);
+                     program.setDescription(displayTime);
+                     programRepository.save(program);
+                 }
+             }
+             Thread.sleep(1000);
+         } catch (Exception e) {
+             System.err.println("❌ khbエラー: " + e.getMessage());
+         }
+     }
+ }
+
+ // ==========================================
+ // NHK仙台
+ // ==========================================
+ public void fetchNhkWeekly() {
+     fetchNhkWeekly(LocalDate.now());
+ }
+
+ public void fetchNhkWeekly(LocalDate startDate) {
+     DateTimeFormatter urlFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+     for (int i = 0; i < 7; i++) {
+         LocalDate targetDate = startDate.plusDays(i);
+         String dateStr = targetDate.format(urlFormatter);
+         String url = "https://bangumi.org/epg/td?broad_cast_date=" + dateStr + "&ggm_group_id=19";
+         try {
+             Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0").timeout(15000).get();
+             // 💡 NHK総合は program_line_2
+             Elements programs = doc.select("#program_line_2 li[s]"); 
+
+             for (Element p : programs) {
+                 String title = p.select(".program_title").text().trim();
+                 String startTimeRaw = p.attr("s"); 
+                 if (!startTimeRaw.isEmpty() && !title.isEmpty()) {
+                     DateTimeFormatter startFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+                     LocalDateTime startTime = LocalDateTime.parse(startTimeRaw, startFormatter);
+                     String displayTime = startTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                     Program program = new Program();
+                     program.setStationName("NHK仙台");
+                     program.setTitle(title);
+                     program.setStartTime(startTime);
+                     program.setDescription(displayTime);
+                     programRepository.save(program);
+                 }
+             }
+             Thread.sleep(1000);
+         } catch (Exception e) {
+             System.err.println("❌ NHKエラー: " + e.getMessage());
+         }
+     }
+ }
+ 
+//==========================================
+//NHK Eテレ仙台
+//==========================================
+public void fetchEteleWeekly() {
+  fetchEteleWeekly(LocalDate.now());
+}
+
+public void fetchEteleWeekly(LocalDate startDate) {
+  DateTimeFormatter urlFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+  for (int i = 0; i < 7; i++) {
+      LocalDate targetDate = startDate.plusDays(i);
+      String dateStr = targetDate.format(urlFormatter);
+      String url = "https://bangumi.org/epg/td?broad_cast_date=" + dateStr + "&ggm_group_id=19";
+      try {
+          Document doc = Jsoup.connect(url).userAgent("Mozilla/5.0").timeout(15000).get();
+          // 💡 Eテレは program_line_3
+          Elements programs = doc.select("#program_line_3 li[s]"); 
+
+          for (Element p : programs) {
+              String title = p.select(".program_title").text().trim();
+              String startTimeRaw = p.attr("s"); 
+              if (!startTimeRaw.isEmpty() && !title.isEmpty()) {
+                  DateTimeFormatter startFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+                  LocalDateTime startTime = LocalDateTime.parse(startTimeRaw, startFormatter);
+                  String displayTime = startTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+
+                  Program program = new Program();
+                  program.setStationName("NHK Eテレ仙台");
+                  program.setTitle(title);
+                  program.setStartTime(startTime);
+                  program.setDescription(displayTime);
+                  programRepository.save(program);
+              }
+          }
+          Thread.sleep(1000);
+      } catch (Exception e) {
+          System.err.println("❌ Eテレエラー: " + e.getMessage());
+      }
+  }
+}
        
 }
 

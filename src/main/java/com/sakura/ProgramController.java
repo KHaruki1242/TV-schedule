@@ -39,11 +39,23 @@ public class ProgramController {
         if ("tbc".equals(stationCode)) {
             programService.fetchTbcWeekly();
             stationName = "TBC東北放送";
-        } else if ("ox".equals(stationCode)) { // 💡 追加
+        } else if ("ox".equals(stationCode)) { 
             programService.fetchOxWeekly();
             stationName = "仙台放送";
+        } else if ("mmt".equals(stationCode)) { 
+            programService.fetchMmtWeekly();
+            stationName = "ミヤギtelevision";
+        } else if ("khb".equals(stationCode)) { // 💡 追加：khb
+            programService.fetchKhbWeekly();
+            stationName = "khb東日本放送";
+        } else if ("nhk".equals(stationCode)) { 
+            programService.fetchNhkWeekly();
+            stationName = "NHK仙台";
+        } else if ("etele".equals(stationCode)) { // 💡 追加：Eテレ
+            programService.fetchEteleWeekly();
+            stationName = "NHK Eテレ仙台";
         }
-           
+            
         return "redirect:/tv?station=" + java.net.URLEncoder.encode(stationName, java.nio.charset.StandardCharsets.UTF_8);
     }
     

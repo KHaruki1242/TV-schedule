@@ -56,16 +56,18 @@
 	            <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
 	        </form>
 	    </div>
-
-	    <!-- ミヤギテレビ (NG版) -->
-	    <div style="display: flex; align-items: center; gap: 2px;">
-	        <a href="javascript:void(0)" 
-	           class="btn-station" 
-	           style="background-color: #ddd; color: #888; cursor: not-allowed; pointer-events: none;">
-	           ミヤギテレビ（NG）
-	        </a>
-	        <button type="button" class="btn-station" style="padding: 10px 10px; opacity: 0.5;" disabled>🔄</button>
-	    </div>
+		<!--ミヤギテレビ-->
+		<div style="display: flex; align-items: center; gap: 2px;">
+			        <a th:href="@{/tv(station='ミヤギテレビ', date=${selectedDate})}" 
+			           class="btn-station" 
+			           th:classappend="${currentStation == 'ミヤギテレビ'} ? 'active-tbc' : ''">
+			           ミヤギテレビ
+			        </a>
+			        <form th:action="@{/tv/update}" method="post" style="display: inline;">
+			            <input type="hidden" name="stationCode" value="mmt">
+			            <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
+			        </form>
+			    </div>
 
 		<!-- 仙台放送 -->
 		<div style="display: flex; align-items: center; gap: 2px;">
@@ -79,9 +81,42 @@
 		        <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
 		    </form>
 		</div>
-		
-	    <button class="btn-station" disabled>khb東日本放送 (準備中)</button>
-	    <button class="btn-station" disabled>NHK仙台 (準備中)</button>
+		<!--khb東日本放送-->
+		<div style="display: flex; align-items: center; gap: 2px;">
+			        <a th:href="@{/tv(station='khb東日本放送', date=${selectedDate})}" 
+			           class="btn-station" 
+			           th:classappend="${currentStation == 'khb東日本放送'} ? 'active-tbc' : ''">
+			           khb東日本放送
+			        </a>
+			        <form th:action="@{/tv/update}" method="post" style="display: inline;">
+			            <input type="hidden" name="stationCode" value="khb">
+			            <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
+			        </form>
+			    </div>
+               <!--NHK仙台-->
+			    <div style="display: flex; align-items: center; gap: 2px;">
+			        <a th:href="@{/tv(station='NHK仙台', date=${selectedDate})}" 
+			           class="btn-station" 
+			           th:classappend="${currentStation == 'NHK仙台'} ? 'active-tbc' : ''">
+			           NHK仙台
+			        </a>
+			        <form th:action="@{/tv/update}" method="post" style="display: inline;">
+			            <input type="hidden" name="stationCode" value="nhk">
+			            <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
+			        </form>
+			    </div>
+				<!--NHK Eテレ-->
+				<div style="display: flex; align-items: center; gap: 2px;">
+					        <a th:href="@{/tv(station='NHK Eテレ仙台', date=${selectedDate})}" 
+					           class="btn-station" 
+					           th:classappend="${currentStation == 'NHK Eテレ仙台'} ? 'active-tbc' : ''">
+					           NHK Eテレ
+					        </a>
+					        <form th:action="@{/tv/update}" method="post" style="display: inline;">
+					            <input type="hidden" name="stationCode" value="etele">
+					            <button type="submit" class="btn-station" style="padding: 10px 10px;" title="最新に更新">🔄</button>
+					        </form>
+					    </div>	    
 	</div>
 
 	<!-- 日付選択タブ (💡 修正：dStr を yyyy-MM-dd に合わせました) -->
